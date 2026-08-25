@@ -34,10 +34,14 @@ font_style = ("Consolas", 20, 'bold')
 headline_font = ("Impact", 28, 'bold')
 
 current_player = PLAYER_X
+starting_player = PLAYER_X
 ai_mode = False   # False = Local Match | True = AI Match
 
-score_X = 0
-score_O = 0
+local_score_X = 0
+local_score_O = 0
+
+ai_score_X = 0
+ai_score_O = 0
 
 # ---------------- BUTTON GRID ---------------- #
 
@@ -98,22 +102,39 @@ def check_game_over():
     win = winner(lst)
 
     if win:
-       global score_X, score_O
-       if win == PLAYER_X:
-        score_X += 1
-       else:
-        score_O += 1
-        
-       score_label.config(
-        text=f"Player X: {score_X}    Player O: {score_O}"
-       )
-       label_turn.config(
+      global local_score_X, local_score_O
+      global ai_score_X, ai_score_O
+
+      if ai_mode:
+        if win == PLAYER_X:
+            ai_score_X += 1
+        else:
+            ai_score_O += 1
+
+        score_label.config(
+            text=f"Player X: {ai_score_X}    AI O: {ai_score_O}"
+        )
+
+      else:
+        if win == PLAYER_X:
+            local_score_X += 1
+        else:
+            local_score_O += 1
+
+        score_label.config(
+            text=f"Player X: {local_score_X}    Player O: {local_score_O}"
+        )
+
+    # These happen for both Local Match and AI Match
+      label_turn.config(
         text=f"{win} Wins!",
         fg=color_X if win == PLAYER_X else color_O
-        )
-       win_sound.play()
-       highlight_winning_combination(win)
-       return True
+       )
+
+      win_sound.play()
+      highlight_winning_combination(win)
+
+      return True
 
     if is_board_full():
         label_turn.config(text="It's a Tie!", fg="yellow")
@@ -165,17 +186,48 @@ def highlight_winning_combination(symbol):
 # ---------------- RESET ---------------- #
 
 def reset():
-    global lst, current_player
+    global lst, current_player, starting_player
+
     lst = [['-', '-', '-'], ['-', '-', '-'], ['-', '-', '-']]
-    current_player = PLAYER_X
+
+    current_player = starting_player
+
+    starting_player = PLAYER_O if starting_player == PLAYER_X else PLAYER_X
+
     create_buttons()
-    label_turn.config(text="Player X Turn", fg=color_X)
+
+    label_turn.config(
+        text=f"{current_player} Turn",
+        fg=color_X if current_player == PLAYER_X else color_O
+    )
+
+    # If AI starts the round
+    if ai_mode and current_player == PLAYER_O:
+        label_turn.config(text="AI Thinking...", fg=color_O)
+        root.update()
+        time.sleep(0.5)
+
+        ai_move()
+        create_buttons()
+
+        if check_game_over():
+            return
+
+        current_player = PLAYER_X
+
+        label_turn.config(text="X Turn", fg=color_X)
 
 # ---------------- MODE SWITCH ---------------- #
 
 def local_match():
     global ai_mode
+
     ai_mode = False
+
+    score_label.config(
+        text=f"Player X: {local_score_X}    Player O: {local_score_O}"
+    )
+
     reset()
 
 def ai_match():
