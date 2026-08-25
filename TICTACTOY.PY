@@ -36,6 +36,9 @@ headline_font = ("Impact", 28, 'bold')
 current_player = PLAYER_X
 ai_mode = False   # False = Local Match | True = AI Match
 
+score_X = 0
+score_O = 0
+
 # ---------------- BUTTON GRID ---------------- #
 
 def create_buttons():
@@ -95,11 +98,22 @@ def check_game_over():
     win = winner(lst)
 
     if win:
-        label_turn.config(text=f"{win} Wins!",
-                          fg=color_X if win == PLAYER_X else color_O)
-        win_sound.play()
-        highlight_winning_combination(win)
-        return True
+       global score_X, score_O
+       if win == PLAYER_X:
+        score_X += 1
+       else:
+        score_O += 1
+        
+       score_label.config(
+        text=f"Player X: {score_X}    Player O: {score_O}"
+       )
+       label_turn.config(
+        text=f"{win} Wins!",
+        fg=color_X if win == PLAYER_X else color_O
+        )
+       win_sound.play()
+       highlight_winning_combination(win)
+       return True
 
     if is_board_full():
         label_turn.config(text="It's a Tie!", fg="yellow")
@@ -274,6 +288,12 @@ reset_btn = Button(can2, text="Reset",
 reset_btn.place(x=100, y=90)
 
 # ---------------- TURN LABEL ---------------- #
+
+score_label = Label(root, text="Player X: 0    Player O: 0",
+                    font=("Consolas", 16, "bold"),
+                    bg=bg_color, fg="white")
+
+score_label.pack(pady=5)
 
 label_turn = Label(root, text="Player X Turn",
                    font=("Consolas", 18),
